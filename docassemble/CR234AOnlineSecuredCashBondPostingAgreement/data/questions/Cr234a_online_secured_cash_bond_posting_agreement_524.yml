@@ -1,16 +1,18 @@
 ---
 include:
   - docassemble.AssemblyLine:assembly_line.yml
+  - docassemble.AKA2JBranding:custom_organization.yml
+  - docassemble.ALToolbox:escape_button.yml
 ---
 metadata:
   title: >-
-    CR-234
+    CR-234 Online secured Cash Bond Posting Agreement
   short title: >-
-    Cr-234a online secured cash bond posting agreement 5-24
+    CR-234
   description: |-
-    Cr-234a online secured cash bond posting agreement 5-24
+    Online secured Cash Bond Posting Agreement
   can_I_use_this_form: |
-    If you are a defendant, you can use this interview to post bail online.
+    If you are a defendant, or someone posting for a defendant, you can use this interview to post bail online.
   before_you_start: |
     Before you get started, you need to...pay your bill
   maturity: production
@@ -48,105 +50,253 @@ code: |
 code: |
   interview_short_title = "Get a Cr-234a online secured cash bond posting agreement 5-24"
 ---
-code: |
-  al_form_type = "existing_case" 
----
 objects:
   - users: ALPeopleList.using(ask_number=True,target_number=1)
+  - defendants: ALPeopleList.using(ask_number=True,target_number=1)
 ---
 sections:
   - review_Cr234a_online_secured_cash_bond_posting_agreement_524: Review your answers
 ---
 #################### Interview order #####################
+mandatory: True
 comment: |
   Controls order and branching logic for questions specific to this form
-id: interview_order_Cr234a_online_secured_cash_bond_posting_agreement_524
+id: Interview Order
 code: |
   # Set the allowed courts for this interview
   allowed_courts = []
   nav.set_section("review_Cr234a_online_secured_cash_bond_posting_agreement_524")
-  user_role = "defendant"
-  user_ask_role = "defendant"
-  moneyDeposit
-  date_signed
-  workphone_cb
-  set_progress(20)
-  defendant_dob
-  defendants.gather()
-  defendants[0].mailing_address.address
-  set_progress(40)
-  defendant_work[0].phone_number
-  Signature4
+  cr234_intro
+  if person_filing == "obo":
+    defendants[0].birthdate
+  user_role = person_filing
+  user_ask_role = person_filing
+  users[0].name.first
+  users[0].phone_number
+  read_cr233
+  money_for_bonds
+  card_transaction
+  bonds_continue
+  money_deposit
+  #if person_filing == "obo":
+  # money_deposit_obo
+  #else:
+  # money_deposit_def
+  send_check
+  if person_filing == "obo":
+   forfeit_deposit_obo
+  else:
+   forfeit_deposit_def
+  if person_filing == "obo":
+   custody_obo
+  else:
+   custody_def
+  contact_info_change
+  # target_variable
+  preview_screen
+  basic_questions_signature_flow
+  signature_date
+  Cr234a_online_secured_cash_bond_posting_agreement_524_download
   interview_order_Cr234a_online_secured_cash_bond_posting_agreement_524 = True
 ---
-###################### Main order ######################
-comment: |
-  This block includes the logic for standalone interviews.
-  Delete mandatory: True to include in another interview
-mandatory: True
-code: |
-  al_intro_screen
-  Cr234a_online_secured_cash_bond_posting_agreement_524_intro
-  interview_order_Cr234a_online_secured_cash_bond_posting_agreement_524
-  signature_date
-  # Store anonymous data for analytics / statistics
-  store_variables_snapshot(
-      persistent=True,
-      data={
-          "zip": showifdef("users[0].address.zip"),
-          "reached_interview_end": True,
-      },
-  )
-  Cr234a_online_secured_cash_bond_posting_agreement_524_preview_question
-  basic_questions_signature_flow    
-  Signature4
-  Cr234a_online_secured_cash_bond_posting_agreement_524_download
----
 id: CR234
-continue button field: Cr234a_online_secured_cash_bond_posting_agreement_524_intro
+continue button field: cr234_intro
 question: |
-  CR-234
+  ## Online secured Cash Bond Posting Agreement
 subquestion: |
-  Before you get started, you need to...pay your bill
+  ## How does this work?
 
-  If you are a defendant, you can use this interview to post bail online.
-
-  Most people take about 10 minutes to complete this interview.
+  1. The interview style form will ask you questions and create forms for you.
+  2. Print the forms and file them at the courthouse.
+  3. After the court has your forms, the court clerk will contact you.
+  
+  * You may email a copy to yourself and print it later.
 ---
-id: Moneydeposit
+id: user role
+question: |
+  I am:
+fields:
+  - no label: person_filing
+    required: True
+    datatype: radio
+    choices:
+      - "the defendant posting my own bonds.": defendant
+      - "someone else posting on the defendant's behalf.": obo
+---
+id: User's Information
+question: |
+  Your Information:
+fields:
+  - First Name: users[0].name.first
+    required: True
+  - Middle Name: users[0].name.middle
+    required: False
+  - Last Name: users[0].name.last
+    required: True
+  - Date of Birth: users[0].birthdate
+    required: True
+---
+id: User's Information 2
+question: |
+  Your Information:
+fields:
+  - Mailing Address: users[0].mailing_address.on_one_line
+    required: True
+  - Email: users[0].email
+    required: True
+  - Cell Phone: users[0].mobile_phone
+    required: false
+  - Work Phone: users[0].work_phone
+    required: false
+  - Home Phone: users[0].phone_number
+    required: false
+---
+id: Defendant's Information
+question: |
+  Defendant's Information:
+fields:
+  - First Name: defendants[0].name.first
+    required: True
+  - Middle Name: defendants[0].name.middle
+    required: False
+  - Last Name: defendants[0].name.last
+    required: True
+  - Date of Birth: defendants[0].birthdate
+    required: True
+---
+id: read CR-233
+question: |
+  I read the Online Secured Cash Bond Posting Summary (form CR-233) that was sent to me by the court.
+fields:
+  - no label: read_cr233
+    required: True
+    datatype: radio
+    choices:
+      - Yes
+---
+id: money
+question: |
+  I understand that
+fields:
+  - no label: money_for_bonds
+    required: True
+    datatype: radio
+    choices:
+      - I am depositing money as security for my bonds.
+  - no label: card_transaction
+    required: True
+    datatype: radio
+    choices:
+      - Each credit card transaction is assessed a 3% convenience fee.  If the bond is later returned (exonerated) to me, this fee will not be returned.
+  - no label: bonds_continue
+    required: True
+    datatype: radio
+    choices:
+      - The bonds continue until the court cancels them.
+---
+mandatory: True
+id: money deposit defendant
 question: |
   **If I follow** the conditions of the bonds, the court will cancel the bonds. If the court cancels the bonds:
 fields:
-  - "Moneydeposit": money_deposit
+  - no label: money_deposit_def
     datatype: radio
     choices:
       - the court may use the money I deposit to pay my fine, judgment, or costs.
       - the court may **not** use the money I deposit to pay my fine, judgment, or costs.
 ---
-id: Date signed
+mandatory: True
+id: money deposit obo
 question: |
-  Date signed
+  **If the defendant follows** the conditions of the bonds, the court will cancel the bonds. If the court cancels the bonds:
 fields:
-  - "Date signed": date_signed
-    maxlength: 23
+  - no label: money_deposit_obo
+    datatype: radio
+    choices:
+      - the court may use the money I deposit to pay the defendants fine, judgment, or costs.
+      - the court may **not** use the money I deposit to pay my fine, judgment, or costs.
 ---
-id: Workphone cb
+mandatory: True
+id: money deposit
 question: |
-  Workphone cb
+  % if person_filing == "obo":
+  **If ${ defendants[0].name.first } follows** the conditions of the bonds, the court will cancel the bonds. If the court cancels the bonds:
+  % else: 
+  **If I follow** the conditions of the bonds, the court will cancel the bonds. If the court cancels the bonds:
+  % endif
 fields:
-  - "Workphone cb": workphone_cb
-    datatype: yesno
+  - no label: money_deposit
+    datatype: radio
+    code: |
+      money_deposit_choices
 ---
-id: Defendant dob
+code: |
+  if person_filing == "obo":
+    money_deposit_choices = [
+      f"the court may use the money I deposit to pay { defendants[0].name.first }'s fine, judgment, or costs.",
+      f"the court may **not** use the money I deposit to pay { defendants[0].name.first }'s fine, judgment, or costs."
+                ]
+  else:
+    money_deposit_choices = [
+      "the court may use the money I deposit to pay the defendants fine, judgment, or costs.",
+      "the court may **not** use the money I deposit to pay my fine, judgment, or costs."
+                ]
+---
+id: canceled or refunded bond
 question: |
-  Defendant dob
+  #####The court will send me a check for the canceled bond money at the address I provide.  The money will not be refunded on the original credit card used to post the bond.  If I post the bond using another person’s credit card, the refund will go to me, not the holder of the credit card.  I am responsible for telling the credit card holder about this before I pay the bond. 
 fields:
-  - "Defendant dob": defendant_dob
-    maxlength: 17
-  - "Cellphone cb": cellphone_cb
-    datatype: yesno
-  - "Defendant cell": defendant_cell
-    maxlength: 19
+  - no label: send_check
+    required: True
+    datatype: radio
+    choices:
+      - I understand and agree.
+---
+id: bond conditions defendant
+question: |
+  **If I do not follow** the conditions of the bonds, the court will forfeit the money to the State of Alaska.  The court will send me notice of forfeiture to the mailing or email address I provide. 
+fields:
+  - no label: forfeit_deposit_def
+    datatype: radio
+    choices:
+      - I understand and agree.
+---
+mandatory: True
+id: bond conditions obo
+question: |
+  **If the defendant does not follow** the conditions of the bonds, the court will forfeit the money to the State of Alaska.  The court will send me notice of forfeiture to the mailing or email address I provide. 
+fields:
+  - no label: forfeit_deposit_obo
+    datatype: radio
+    choices:
+      - I understand and agree.
+---
+id: custody defendant
+question: |
+  If I am in custody, the jail will not release me until the full bond amount has been posted for every case that has a bond requirement.  The court will only notify the jail of bond payments made during [online bail processing hours](https://courts.alaska.gov/trialcourts/bail.htm).  It may take the jail a few hours after notification from the court to release me.
+fields:
+  - no label: custody_def
+    datatype: radio
+    choices:
+      - I understand and agree.
+---
+id: custody defendant obo
+question: |
+  If the defendant is in custody, the jail will not release them until the full bond amount has been posted for every case that has a bond requirement.  The court will only notify the jail of bond payments made during [online bail processing hours](https://courts.alaska.gov/trialcourts/bail.htm).  It may take the jail a few hours after notification from the court to release the defendant. 
+fields:
+  - no label: custody_obo
+    datatype: radio
+    choices:
+      - I understand and agree.
+---
+id: information change
+question: |
+  I will tell the court in writing if my email, phone number, or mailing address changes. [Use form [TF-955](https://public.courts.alaska.gov/web/forms/docs/TF-955.pdf).]
+fields:
+  - no label: contact_info_change
+    datatype: radio
+    choices:
+      - I understand and agree.
 ---
 id: preview Cr234a_online_secured_cash_bond_posting_agreement_524
 question: |
@@ -162,14 +312,14 @@ subquestion: |
   ${ action_button_html(url_action('review_Cr234a_online_secured_cash_bond_posting_agreement_524'), label='Edit answers', color='info') }
   
   Remember to come back to this window to continue and sign your form.
-continue button field: Cr234a_online_secured_cash_bond_posting_agreement_524_preview_question    
+continue button field: preview_screen    
 ---
 code: |
-  signature_fields = ['Signature4']
+  signature_fields = ['users[0].signature']
 ---
 question: |
-  Signature4, sign below
-signature: Signature4
+  Sign below
+signature: users[0].signature
 ---
 code: |
   # This is a placeholder for the addresses that will be searched
@@ -190,11 +340,11 @@ review:
       % for item in defendants:
         * ${ item }
       % endfor
-  - Edit: defendant_dob
+  - Edit: defendants[0].birthdate
     button: |
       **Defendant dob**:
       ${ defendant_dob }
-  - Edit: moneyDeposit
+  - Edit: users[0].name.first
     button: |
       **Moneydeposit**:
       ${ moneyDeposit }
@@ -206,19 +356,19 @@ review:
     button: |
       **Date signed**:
       ${ date_signed }
-  - Edit: cellphone_cb
+  - Edit: users[0].mailing_address
     button: |
       **Cellphone cb**:
       ${ word(yesno(cellphone_cb)) }
-  - Edit: workphone_cb
+  - Edit: read_cr233
     button: |
       **Workphone cb**:
       ${ word(yesno(workphone_cb)) }
-  - Edit: defendant_cell
+  - Edit: money_for_bonds
     button: |
       **Defendant cell**:
       ${ defendant_cell }
-  - Edit: defendant_work.revisit
+  - Edit: card_transaction
     button: |
       **Defendant work**
 
@@ -302,21 +452,28 @@ attachment:
   filename: Cr234a_online_secured_cash_bond_posting_agreement_524
   variable name: Cr234a_online_secured_cash_bond_posting_agreement_524_attachment[i]
   skip undefined: True
-  pdf template file: Cr234a_online_secured_cash_bond_posting_agreement_524.pdf
-  fields:
-      - "defendant_name": ${ defendants[0] }
-      - "defendant_name": ${ defendants[0] }
-      - "defendant_dob": ${ defendant_dob }
-      - "defendant_dob": ${ defendant_dob }
-      - "moneyDeposit": ${ moneyDeposit }
-      # It's a signature: test which file version this is; leave empty unless it's the final version)
-      - "Signature4": ${ Signature4 if i == "final" else '' }
-      - "date_signed": ${ date_signed }
-      - "defendant_mailing_address": ${ defendants[0].mailing_address }
-      - "cellphone_cb": ${ cellphone_cb }
-      - "workphone_cb": ${ workphone_cb }
-      - "defendant_cell": ${ defendant_cell }
-      - "defendant_work_phone": ${ defendant_work[0].phone_number }
-
-
-
+  # docx template file: CR-234A_Online_Secured_Cash_Bond_Posting_Agreement_5-24_DOCA.docx
+  docx template file: cr234_online_secured_cash_bond_posting_agreement_524_doca.docx
+  tagged pdf: True
+---
+#attachment:
+#  name: Cr234a online secured cash bond posting agreement 524
+#  filename: Cr234a_online_secured_cash_bond_posting_agreement_524
+#  variable name: Cr234a_online_secured_cash_bond_posting_agreement_524_attachment[i]
+#  skip undefined: True
+#  pdf template file: Cr234a_online_secured_cash_bond_posting_agreement_524.pdf
+#  fields:
+#      - "defendant_name": ${ defendants[0] }
+#      - "defendant_name": ${ defendants[0] }
+#      - "defendant_dob": ${ defendant_dob }
+#      - "defendant_dob": ${ defendant_dob }
+#      - "moneyDeposit": ${ moneyDeposit }
+#      # It's a signature: test which file version this is; leave empty unless it's the final version)
+#      - "Signature4": ${ Signature4 if i == "final" else '' }
+#      - "date_signed": ${ date_signed }
+#      - "defendant_mailing_address": ${ defendants[0].mailing_address }
+#      - "cellphone_cb": ${ cellphone_cb }
+#      - "workphone_cb": ${ workphone_cb }
+#      - "defendant_cell": ${ defendant_cell }
+#      - "defendant_work_phone": ${ defendant_work[0].phone_number }
+---
